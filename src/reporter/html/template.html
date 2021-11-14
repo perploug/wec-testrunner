@@ -1,0 +1,254 @@
+<html>
+    <head>
+        <title>
+            Website Evidence Collector Test Report
+        </title>
+        
+        <style>
+            body{padding: 30px; font-family: sans-serif; font-size: 12px;}
+            table {
+                border-collapse: collapse;
+                margin: 25px 0;
+                font-size: 12px;
+                width: 90%;
+                min-width: 600px;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+                table-layout:fixed;
+                overflow:hidden; 
+                white-space: nowrap; 
+            }    
+
+            table thead tr {
+                background-color: #009879;
+                color: #ffffff;
+                text-align: left;
+            }
+            table th,
+            table td {
+                padding: 12px 15px;
+            }
+            table tbody tr {
+                border-bottom: 1px solid #dddddd;
+            }
+
+            table tbody tr.target:nth-of-type(even) {
+                background-color: #f3f3f3;
+            }
+            table tbody tr.test {
+                background-color: #fff;
+                display:none
+            }
+            table tbody.show-tests tr.test {
+                background-color: #fff;
+                display:table-row;
+            }
+
+            table tr.test td {
+                padding: 8px 15px 8px 30px;
+            }
+            table tbody tr:last-of-type {
+                border-bottom: 2px solid #009879;
+            }
+
+            table tbody tr.group {
+                font-weight: bold;
+                color: #009879;
+            }
+
+            label.label{
+                display: inline-block;
+                padding: 0 7px;
+                font-size: 12px;
+                font-weight: 500;
+                line-height: 18px;
+                border: 1px solid transparent;
+                border-radius: 2em;
+                background-color: transparent !important;
+                border-color: var(--color-border-default);
+            }
+
+            label.success{
+                color: #2da44e;
+                border-color: #2da44e;
+            }
+            label.failed{
+                color: #cf222e;
+                border-color: #cf222e;
+            }
+
+            .red{
+                color: #cf222e;
+                font-size: 16px
+            }
+
+            .green{
+                font-size: 16px;
+                color: #2da44e;
+            }
+
+            div.details{
+                background: #f2f2f2;
+                border: 1px solid #dddddd;
+                padding: 4px;
+                display: none;
+            }
+            div.details pre{
+                margin: 0px;
+                overflow-x: auto;
+                max-width: 100%;
+                padding: 5px
+            }
+            table tr.show-details .details {
+                display: block;
+            }
+
+        </style>
+
+        <script type="text/javascript">
+            function toggleNext(elm){
+                var x = elm.nextSibling;
+                if (x.style.display === "none") {
+                    x.style.display = "block";
+                } else {
+                    x.style.display = "none";
+                }
+            }
+
+            function toggleClass(id, cls) {
+                var x = document.getElementById(id);
+                x.classList.toggle(cls);
+            }
+        </script>
+        
+        
+      </head>
+    <body>
+        
+        <h1 class="test-results-header">
+            Website Evidence Collector Test Report
+        </h1>
+
+        {{#each tests}}
+
+        <h2>{{this.suite}}</h2>
+        <div>
+            <p>Scanned {{this.targets_total}} urls, 
+            <label class="label success">{{this.targets_passed}} Passed</label>
+            <label class="label failed">{{this.targets_failed}} Failed</label>
+            </p>
+        </div>
+
+        <table class="test-result-table" cellspacing="0">
+            <thead>
+                <tr>
+                    <td>
+                        Url
+                    </td>
+
+                    <td style="width: 40px">
+                        Tests
+                    </td>
+
+                    <td style="width: 40px">
+                        Passed
+                    </td>
+
+                    <td style="width: 40px">
+                        Failed
+                    </td>
+                </tr>
+            </thead>
+
+            
+                {{#each this.targets}}
+                <tbody id="{{../suite}}-{{@index}}">
+                    <tr class="target" onclick="toggleClass('{{../suite}}-{{@index}}', 'show-tests')">
+                        <td>
+                            {{#if this.pass}}
+                                <span class="green">&check;</span> 
+                            {{else}}
+                                <span class="red">&cross;</span> 
+                            {{/if}}
+
+                            {{this.url}}
+                        </td>
+
+                        <td>
+                            <label class="label">{{this.tests_total}}</label>
+                        </td>
+                        <td>
+                            <label class="label success">{{this.tests_passed}}</label>
+                        </td>
+                        <td>
+                            <label class="label failed">{{this.tests_failed}}</label>
+                        </td>
+                    </tr>
+
+                {{#each this.tests}}
+                    <tr class="test" id="{{../../suite}}-{{@../index}}-{{@index}}"> 
+                        {{#if this.pass}}
+                        <td colspan="3">
+                            <span class="green">&#x25CF;</span> {{this.label}}
+                        </td>
+                        {{else}}
+
+                        
+                        <td colspan="4">
+                            <span onclick="toggleClass('{{../../suite}}-{{@../index}}-{{@index}}', 'show-details')">
+                                <span class="red">&#x25CF;</span> {{this.label}}
+                            </span>    
+                            <div class="details">
+                            <strong>Message:</strong><br>
+                            <code><pre>{{this.message}}</pre></code>
+                            
+                            {{#if this.stacktrace}}
+                            <strong>Stacktrace:</strong><br>
+                            <code><pre>{{this.stacktrace}}</pre></code>
+                            {{/if}}
+                            </div>
+                        </td>
+                        {{/if}}
+                    </tr>
+                
+                {{/each}}
+                </tbody>    
+                {{/each}}
+
+
+                <!--
+                <tr class="test-result-step-row test-result-comment-row">
+                    <td class="test-result-describe-cell" colspan="3">
+                        Describe: This is a comment
+                    </td>
+                </tr>
+                <tr class="test-result-step-row test-result-step-row-alttwo">
+                    <td class="test-result-step-command-cell">
+                        click btnG
+                    </td>
+                    <td class="test-result-step-description-cell">
+                        Click on page element with identifier of "btnG"
+                    </td>
+                    <td class="test-result-step-result-cell-failure">
+                        FAILURE - Unable to find element named "btnG"
+                    </td>
+                </tr>
+                <tr class="test-result-step-row test-result-step-row-altone">
+                    <td class="test-result-step-command-cell">
+                        assertTitle something
+                    </td>
+                    <td class="test-result-step-description-cell">
+                        Test that the title of the page is "something"
+                    </td>
+                    <td class="test-result-step-result-cell-notperformed">
+                        NOT PERFORMED
+                    </td>
+                </tr>
+
+                -->
+
+        </table>
+        {{/each}}
+
+
+    </body>
+</html>

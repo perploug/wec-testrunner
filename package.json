@@ -1,0 +1,27 @@
+{
+  "name": "wec-testrunner",
+  "version": "1.0.0",
+  "description": "Test Runner to automated Website Evidence Collector",
+  "main": "implementation/index.js",
+  "scripts": {
+    "test": "node implementation/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/perploug/wec-testrunner.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/perploug/wec-testrunner/issues"
+  },
+  "homepage": "https://github.com/perploug/wec-testrunner#readme",
+  "dependencies": {
+    "expect": "^27.3.1",
+    "handlebars": "^4.7.7",
+    "junit-report-builder": "^3.0.0",
+    "require-folder": "^1.0.0",
+    "strip-ansi": "4.0.0",
+    "website-evidence-collector": "git+https://github.com/perploug/website-evidence-collector.git"
+  }
+}
