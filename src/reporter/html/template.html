@@ -5,12 +5,12 @@
         </title>
         
         <style>
-            body{padding: 30px; font-family: sans-serif; font-size: 12px;}
+            body{padding: 5%; font-family: sans-serif; font-size: 12px;}
             table {
                 border-collapse: collapse;
                 margin: 25px 0;
                 font-size: 12px;
-                width: 90%;
+                width: 100%;
                 min-width: 600px;
                 box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
                 table-layout:fixed;
@@ -23,15 +23,20 @@
                 color: #ffffff;
                 text-align: left;
             }
+
             table th,
             table td {
                 padding: 12px 15px;
+                text-align: center;
             }
+
+            table th {text-align: left; font-weight: normal;}
+            table a{color: #000;}
             table tbody tr {
                 border-bottom: 1px solid #dddddd;
             }
 
-            table tbody tr.target:nth-of-type(even) {
+            table tbody:nth-of-type(even) tr.target, table.overview tr:nth-of-type(even) {
                 background-color: #f3f3f3;
             }
             table tbody tr.test {
@@ -45,6 +50,7 @@
 
             table tr.test td {
                 padding: 8px 15px 8px 30px;
+                text-align: left;
             }
             table tbody tr:last-of-type {
                 border-bottom: 2px solid #009879;
@@ -128,9 +134,65 @@
             Website Evidence Collector Test Report
         </h1>
 
+        <table class="test-result-table overview" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>
+                        Test Suite
+                    </th>
+
+                    <td style="width: 80px">
+                        Scanned Targets
+                    </td>
+
+                    <td style="width: 50px">
+                        Tests
+                    </td>
+
+                    <td style="width: 80px">
+                        Passed Tests
+                    </td>
+
+                    <td style="width: 80px">
+                        Failed Tests
+                    </td>
+                </tr>
+            </thead>
+
+            <tbody>
+            {{#each tests}}
+                <tr>
+                    <th>
+                        {{#if this.pass}}
+                            <span class="green">&check;</span> 
+                        {{else}}
+                            <span class="red">&cross;</span> 
+                        {{/if}}
+
+                        <a href="#{{this.suite}}">{{this.suite}}</a>
+                    </th>
+
+                    <td>
+                        <label class="label">{{this.targets_total}}</label>
+                    </td>
+
+                    <td>
+                        <label class="label">{{this.tests_total}}</label>
+                    </td>
+                    <td>
+                        <label class="label success">{{this.tests_passed}}</label>
+                    </td>
+                    <td>
+                        <label class="label failed">{{this.tests_failed}}</label>
+                    </td>
+                </tr>
+            {{/each}}
+            </tbody>
+        </table>
+
         {{#each tests}}
 
-        <h2>{{this.suite}}</h2>
+        <h2 id="{{this.suite}}">{{this.suite}}</h2>
         <div>
             <p>Scanned {{this.targets_total}} urls, 
             <label class="label success">{{this.targets_passed}} Passed</label>
@@ -141,19 +203,19 @@
         <table class="test-result-table" cellspacing="0">
             <thead>
                 <tr>
-                    <td>
+                    <th>
                         Url
-                    </td>
+                    </th>
 
-                    <td style="width: 40px">
+                    <td style="width: 50px">
                         Tests
                     </td>
 
-                    <td style="width: 40px">
+                    <td style="width: 50px">
                         Passed
                     </td>
 
-                    <td style="width: 40px">
+                    <td style="width: 50px">
                         Failed
                     </td>
                 </tr>
@@ -163,7 +225,7 @@
                 {{#each this.targets}}
                 <tbody id="{{../suite}}-{{@index}}">
                     <tr class="target" onclick="toggleClass('{{../suite}}-{{@index}}', 'show-tests')">
-                        <td>
+                        <th>
                             {{#if this.pass}}
                                 <span class="green">&check;</span> 
                             {{else}}
@@ -171,7 +233,7 @@
                             {{/if}}
 
                             {{this.url}}
-                        </td>
+                        </th>
 
                         <td>
                             <label class="label">{{this.tests_total}}</label>

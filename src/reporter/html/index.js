@@ -28,6 +28,19 @@ module.exports = function (context = {}, args = {}) {
       fs.readFileSync(workingTemplate, "utf8")
     );
 
+    testSuiteResults.sort((a, b) => (a.tests_failed < b.tests_failed ? 1 : -1));
+    testSuiteResults.forEach((suiteTest) => {
+      suiteTest.targets.forEach((target) => {
+        target.tests = target.tests.sort((a, b) =>
+          a.pass === b.pass ? 0 : a ? -1 : 1
+        );
+      });
+
+      suiteTest.targets = suiteTest.targets.sort((a, b) =>
+        a.tests_failed < b.tests_failed ? 1 : -1
+      );
+    });
+
     fs.writeFileSync(
       path.join(
         reporter.context.rootFolder,

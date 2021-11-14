@@ -47,8 +47,8 @@ module.exports = function (rootfolder) {
     );
     var evidence = getEvidence(directoryPath);
 
-    if (suite.collect.hasOwnProperty("beforeAll")) {
-      await suite.test.afterEach(testRunner, {
+    if (suite.test.hasOwnProperty("beforeAll")) {
+      await suite.test.beforeAll(testRunner, {
         suite,
         config: suite.test.config,
         data: evidence,
@@ -76,7 +76,7 @@ module.exports = function (rootfolder) {
         const testCase = { label: key, pass: true };
         urlTest.tests.push(testCase);
 
-        if (suite.collect.hasOwnProperty("beforeEach")) {
+        if (suite.test.hasOwnProperty("beforeEach")) {
           await suite.test.beforeEach(testRunner, {
             suite,
             config: suite.test.config,
@@ -102,10 +102,10 @@ module.exports = function (rootfolder) {
           suiteTest.pass = false;
 
           console.log(` 🔴 ${key}`);
-          console.error(ex.message);
+          console.error(testCase.message);
         }
 
-        if (suite.collect.hasOwnProperty("afterEach")) {
+        if (suite.test.hasOwnProperty("afterEach")) {
           await suite.test.afterEach(testRunner, {
             suite,
             config: suite.test.config,
@@ -119,7 +119,9 @@ module.exports = function (rootfolder) {
       urlTest.tests_passed = urlTest.tests.filter((x) => x.pass).length;
       urlTest.tests_failed = urlTest.tests.filter((x) => !x.pass).length;
 
-      console.log("");
+      //  urlTest.tests = urlTest.tests.sort((a, b) =>
+      //    a.pass === b.pass ? 0 : a ? -1 : 1
+      //  );
     }
 
     suiteTest.tests_total = suiteTest.targets.reduce(function (prev, cur) {
@@ -136,7 +138,11 @@ module.exports = function (rootfolder) {
     suiteTest.targets_passed = suiteTest.targets.filter((x) => x.pass).length;
     suiteTest.targets_failed = suiteTest.targets.filter((x) => !x.pass).length;
 
-    if (suite.collect.hasOwnProperty("afterAll")) {
+    //    suiteTest.targets = suiteTest.targets.sort((a, b) =>
+    //      a.tests_failed < b.tests_failed ? 1 : -1
+    //    );
+
+    if (suite.test.hasOwnProperty("afterAll")) {
       await suite.test.afterAll(testRunner, {
         suite,
         config: suite.test.config,

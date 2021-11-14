@@ -3,9 +3,7 @@ const testrunner = require("./testrunner/");
 const reporter = require("./reporter/");
 
 const requirefolder = require("require-folder");
-
 const fs = require("fs");
-const rimraf = require("rimraf");
 
 // target can be filestring, folderstring, require, or array of require
 // args is the standard arguments object
@@ -15,7 +13,9 @@ function _addComponent(component, collection) {
     if (component.endsWith(".js")) {
       collection.push(require(component));
     } else {
-      collection.concat(Object.values(requirefolder(component)));
+      Object.values(requirefolder(component)).map((x) => {
+        collection.push(x);
+      });
     }
 
     return;
