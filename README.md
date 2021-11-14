@@ -1,5 +1,8 @@
 # WecRunner
 
+**NOTE:** This is work in progress, and is awaiting a merge of PR #66 on the WEC repository, the code below uses a modified branch of WEC, see here for background: https://github.com/EU-EDPS/website-evidence-collector/pull/66
+
+
 The WEC Testrunner is a wrapper around the [Website Evidence Collector (WEC)]() to script automated compliance checks 
 against one or more websites.
 
