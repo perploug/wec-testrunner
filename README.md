@@ -1,5 +1,8 @@
 # WecRunner
 
+**NOTE:** This is work in progress, and is awaiting a merge of PR #66 on the WEC repository, the code below uses a modified branch of WEC, see here for background: https://github.com/EU-EDPS/website-evidence-collector/pull/66
+
+
 The WEC Testrunner is a wrapper around the [Website Evidence Collector (WEC)]() to script automated compliance checks 
 against one or more websites.
 
@@ -32,7 +35,7 @@ each test suite can also be extended with custom configuration for collecting ev
 
 A basic testsuite could look like this: 
 
-```
+```javascript
 const expect = require("expect");
 
 module.exports = {
@@ -56,7 +59,7 @@ module.exports = {
 In case you want to centralise allow/block lists, there is also the option of 
 setting a config which is passed to all tests:
 
-```
+```javascript
 test: {
     config: {
       blocked: ["google.com, "facebook.com", "instagram.com"]
@@ -78,7 +81,7 @@ the pattern of: 1. Collect the evidence, 2. Execute Tests, 3. Report the finding
 
 A standard execution could look like this:
 
-```
+```javascript
 // import the runner
 const wecTestRunner = require("wecrunner");
 const singleTestCase = require("./tests/websitetest");
@@ -116,6 +119,3 @@ async function run() {
 // execute the whole thing
 run();
 ```
-
-
-### Built-in Assertions
