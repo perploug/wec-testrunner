@@ -3,30 +3,46 @@ const StandardLogger = require("website-evidence-collector/lib/logger.js");
 const StandardWecConfig = require("website-evidence-collector/config.js");
 
 const fs = require("fs");
+const path = require("path");
+const rimraf = require("rimraf");
 const fb = require("../helpers/feedback");
+const { nanoid } = require("nanoid");
+
+function generateUrlObj(url) {
+  return {
+    url: url,
+    label: url.replace("https://").replace("http://"),
+    id: url.replace(/\W/g, "") + "_" + nanoid(5),
+  };
+}
+
+function generateIdOnUrlObj(urlObj) {
+  if (urlObj.id) return;
+
+  // ensure uniqueness
+  urlObj.id = urlObj.url.replace(/\W/g, "") + "_" + nanoid(5);
+
+  // for simple mapping of a variant with a config change
+  // this should be documented...
+  if (urlObj.variant) {
+    urlObj.id = urlObj.id + "_" + urlObj.variant;
+  }
+}
 
 module.exports = function (rootfolder) {
-  this.urls = [];
+  this.urls = {};
   this.rootFolder = rootfolder;
   this.folder = "evidence";
-
-  this.done = function () {
-    return urls.length === 0;
-  };
 
   this.collectSuite = async function (suite) {
     const collector = this;
 
-    let urls = [];
-    if (typeof suite.collect.urls === "string") {
-      urls.push(suite.collect.urls);
-    } else {
-      urls = urls.concat(suite.collect.urls);
-    }
-
-    fb("Scanning " + suite.name, "info");
-    fb("Scanning the following " + urls.length + " urls:", "info");
-    fb(urls);
+    // clean-up
+    rimraf.sync(path.join(collector.rootFolder, collector.folder, suite.name));
+    fs.mkdirSync(
+      path.join(collector.rootFolder, collector.folder, suite.name),
+      { recursive: true }
+    );
 
     // here we will prepared the config on the suite, this can then be altered in the eventing
     let workingConfig = StandardWecConfig("");
@@ -39,6 +55,19 @@ module.exports = function (rootfolder) {
     if (suite.collect.config) {
       workingConfig = { ...workingConfig, ...suite.collect.config };
     }
+
+    let urls = [];
+    suite.collect.urls.forEach((x) => {
+      if (typeof x === "string") {
+        urls.push(generateUrlObj(x));
+      } else {
+        urls.push(x);
+      }
+    });
+
+    fb("Scanning " + suite.name, "info");
+    fb("Scanning the following " + urls.length + " urls:", "info");
+    fb(urls.map((x) => x.url).join(", "));
 
     if (suite.collect.hasOwnProperty("beforeAll")) {
       var response = await suite.collect.beforeAll(collector, {
@@ -55,64 +84,67 @@ module.exports = function (rootfolder) {
       await this.collectUrl(url, suite, workingConfig);
     }
 
+    // storing the index file of all urls scanned, otherwise its impossible to track what and in which variant it was scanned
+    const indexFile = `${collector.rootFolder}/${collector.folder}/${suite.name}/_targets`;
+    fs.writeFileSync(indexFile, JSON.stringify(this.urls, null, 2));
+
     if (suite.collect.hasOwnProperty("afterAll")) {
       await suite.collect.afterAll(collector, { suite, config: workingConfig });
     }
   };
 
-  this.collectUrl = async function (url, suite, config) {
+  this.collectUrl = async function (target, suite, config) {
     const collector = this;
 
+    // we need to normalise our url object, so we always have an ID, url, and label
+    if (typeof target === "string") {
+      target = generateUrlObj(target);
+    } else {
+      generateIdOnUrlObj(target);
+    }
+
     // ensure we only run each target once
-    if (collector.urls.includes(url)) {
-      fb("Skipping: " + url, "error");
+    if (collector.urls[target.id]) {
+      fb("Skipping: " + target.url, "error");
       return;
     }
-    collector.urls.push(url);
-    config.url = url;
+
+    // we add it as an indexed value
+    collector.urls[target.id] = target;
+
+    // if there is a config attached to the target, we add it
+    if (target.config) {
+      config = { ...config, ...target.config };
+    }
+
+    config.url = target.url;
 
     if (suite.collect.hasOwnProperty("beforeEach")) {
       var response = await suite.collect.beforeEach(collector, {
         suite,
         config,
-        url,
+        target,
       });
       if (response === false) {
-        fb("Skipping: " + url, "error");
+        fb("Skipping: " + target.url, "error");
         return;
       }
     }
 
     try {
-      const name = url.replace(/\W/g, "");
+      fb(`Scanning: ${target.url}`, "info");
 
-      fs.mkdirSync(
-        `${collector.rootFolder}/${collector.folder}/${suite.name}`,
-        {
-          recursive: true,
-        }
-      );
-
-      fb(`Scanning: ${url}`, "info");
       const log = StandardLogger.create({ console: { silent: true } });
       const json = await websiteEvidenceCollector(config, log);
 
-      try {
-        fb(
-          `Cookies: ${json.cookies.length}, Beacons: ${json.beacons.length}, Hosts: ${json.hosts.requests.thirdParty.length}`
-        );
-      } catch (ex) {
-        fb(ex, "error");
-      }
-
-      const outputFile = `${collector.rootFolder}/${collector.folder}/${suite.name}/${name}.json`;
+      const outputFile = `${collector.rootFolder}/${collector.folder}/${suite.name}/${target.id}.json`;
       fs.writeFileSync(outputFile, JSON.stringify(json, null, 2));
 
       if (suite.collect.hasOwnProperty("afterEach")) {
         await suite.collect.afterEach(collector, {
           suite,
           config,
-          url,
+          target,
           data: json,
         });
       }

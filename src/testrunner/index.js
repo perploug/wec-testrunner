@@ -11,15 +11,22 @@ module.exports = function (rootfolder) {
 
   // we need this to collect reports from the evidence
   function getEvidence(directoryPath) {
-    var urls = [];
-
     if (fs.existsSync(directoryPath)) {
-      fs.readdirSync(directoryPath).forEach((file) => {
-        file = file.substring(0, file.length - 5);
-        urls.push(file);
-      });
+      if (fs.existsSync(path.join(directoryPath, "_targets"))) {
+        return JSON.parse(
+          fs.readFileSync(path.join(directoryPath, "_targets"), "utf8")
+        );
+      } else {
+        var urls = {};
+        fs.readdirSync(directoryPath).forEach((file) => {
+          if (file.endsWith(".json")) {
+            file = file.substring(0, file.length - 5);
+            urls[file] = { id: file };
+          }
+        });
+      }
     }
-    return urls;
+    return {};
   }
 
   this.testSuites = async function (suites) {
@@ -59,16 +66,18 @@ module.exports = function (rootfolder) {
 
     const suiteTest = { suite: suite.name, targets: [], pass: true };
 
-    for (const evidencefile of evidence) {
-      const path = "/evidence/" + suite.name + "/" + evidencefile + ".json";
+    for (const evidencefile of Object.values(evidence)) {
+      const path = "/evidence/" + suite.name + "/" + evidencefile.id + ".json";
       const file = fs.readFileSync(testRunner.rootFolder + path);
       const evidence = JSON.parse(file);
 
-      const urlTest = { file: path, tests: [], pass: true };
+      const urlTest = { ...evidencefile, file: path, tests: [], pass: true };
       urlTest.url = evidence.uri_ins;
-      urlTest.label = `${suite.name}: ${evidence.uri_ins
-        .replace("https://", "")
-        .replace("http://", "")}`;
+      if (!urlTest.label) {
+        urlTest.label = `${suite.name}: ${evidence.uri_ins
+          .replace("https://", "")
+          .replace("http://", "")}`;
+      }
 
       suiteTest.targets.push(urlTest);
 
@@ -82,6 +91,7 @@ module.exports = function (rootfolder) {
             config: suite.test.config,
             data: evidence,
             test: testCase,
+            target: urlTest,
           });
         }
 
@@ -118,10 +128,6 @@ module.exports = function (rootfolder) {
       urlTest.tests_total = urlTest.tests.length;
       urlTest.tests_passed = urlTest.tests.filter((x) => x.pass).length;
       urlTest.tests_failed = urlTest.tests.filter((x) => !x.pass).length;
-
-      //  urlTest.tests = urlTest.tests.sort((a, b) =>
-      //    a.pass === b.pass ? 0 : a ? -1 : 1
-      //  );
     }
 
     suiteTest.tests_total = suiteTest.targets.reduce(function (prev, cur) {
@@ -137,10 +143,6 @@ module.exports = function (rootfolder) {
     suiteTest.targets_total = suiteTest.targets.length;
     suiteTest.targets_passed = suiteTest.targets.filter((x) => x.pass).length;
     suiteTest.targets_failed = suiteTest.targets.filter((x) => !x.pass).length;
-
-    //    suiteTest.targets = suiteTest.targets.sort((a, b) =>
-    //      a.tests_failed < b.tests_failed ? 1 : -1
-    //    );
 
     if (suite.test.hasOwnProperty("afterAll")) {
       await suite.test.afterAll(testRunner, {
