@@ -7,25 +7,32 @@ const path = require("path");
 const rimraf = require("rimraf");
 const fb = require("../helpers/feedback");
 const { nanoid } = require("nanoid");
+const { isRegExp } = require("util/types");
 
 function generateUrlObj(url) {
   return {
     url: url,
     label: url.replace("https://").replace("http://"),
-    id: url.replace(/\W/g, "") + "_" + nanoid(5),
+    id: url.replace(/\W/g, ""),
   };
 }
 
 function generateIdOnUrlObj(urlObj) {
+  //in most cases we won't need an id as it comes from the url
   if (urlObj.id) return;
 
   // ensure uniqueness
-  urlObj.id = urlObj.url.replace(/\W/g, "") + "_" + nanoid(5);
+  urlObj.id = urlObj.url.replace(/\W/g, "");
 
   // for simple mapping of a variant with a config change
   // this should be documented...
   if (urlObj.variant) {
     urlObj.id = urlObj.id + "_" + urlObj.variant;
+  }
+
+  // if we have a config object, we attach a unique key to ensure that different configs are stored seperately
+  if (urlObj.config) {
+    urlObj.id + urlObj.id + "_" + nanoid(5);
   }
 }
 
