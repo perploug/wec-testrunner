@@ -3,14 +3,16 @@
 **NOTE:** This is work in progress, and is awaiting a merge of PR #66 on the WEC repository, the code below uses a modified branch of WEC, see here for background: https://github.com/EU-EDPS/website-evidence-collector/pull/66
 
 
-The WEC Testrunner is a wrapper around the [Website Evidence Collector (WEC)]() to script automated compliance checks 
-against one or more websites.
+The WEC Testrunner is a wrapper around the [Website Evidence Collector (WEC)]() to script automated GDRP compliance checks against one or more websites - essentially to test and monitor if your use of third party cookies, scripts and other resources is in accordance with your cookie consent settings. 
 
-While WEC is an excellent compliance test of a single website's compliance following the guidelines of the [EDPS](), it is 
-intended to be a standalone tool for auditors to use. This testrunner allows you to script compliance checks and
-execute an automated suite of tests against the collected evidence. 
+The test runner uses WEC, which the european data authorities use to audit websites, it is therefore in
+line with what an external auditor would see when checking your sites. 
 
-This allows you detect if your usage of 3rd party scripts have changed, based on your own ruleset, such as:
+While WEC is an excellent compliance test of a single website's compliance following the guidelines of the [EDPS](https://edps.europa.eu/_en), it is intended to be a standalone tool for auditors to use. 
+
+This testrunner allows you to script compliance checks and execute an automated suite of tests against the collected evidence. 
+
+This allows you to automatically detect if your usage of 3rd party scripts have changed, based on your own ruleset, such as:
 
 - Does the website load any facebook or google resources?
 - Does the website conform to only loading beacons from a list of allowed domains? 
