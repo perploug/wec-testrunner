@@ -22,7 +22,7 @@ module.exports = {
 
     beforeEach: async function (collector, context) {
       // before events can return false to indicate a given url should be skipped, so lets skip all urls with the word frog
-      if (context.url.indexOf("frog") > -1) return false;
+      if (context.target.url.indexOf("frog") > -1) return false;
     },
 
     afterEach: async function (collector, context) {
@@ -30,7 +30,7 @@ module.exports = {
       // notice how we also use the config flag from context.config
       if (
         context.config.collectSampleVideos &&
-        context.url.indexOf("/videos") > 0
+        context.target.url.indexOf("/videos") > 0
       ) {
         // in this sample, we look for all links in the WEC data object which contains /video/
         var links = context.data.links.thirdParty.filter(

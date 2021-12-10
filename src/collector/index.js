@@ -1,4 +1,8 @@
-const websiteEvidenceCollector = require("website-evidence-collector/index.js");
+//const websiteEvidenceCollector = require("website-evidence-collector/index.js");
+
+const wecCollector = require("website-evidence-collector/collector/index");
+const wecInspector = require("website-evidence-collector/inspector/index");
+
 const StandardLogger = require("website-evidence-collector/lib/logger.js");
 const StandardWecConfig = require("website-evidence-collector/config.js");
 
@@ -7,7 +11,6 @@ const path = require("path");
 const rimraf = require("rimraf");
 const fb = require("../helpers/feedback");
 const { nanoid } = require("nanoid");
-const { isRegExp } = require("util/types");
 
 function generateUrlObj(url) {
   return {
@@ -18,6 +21,9 @@ function generateUrlObj(url) {
 }
 
 function generateIdOnUrlObj(urlObj) {
+  if (!urlObj.label) {
+    urlObj.label = urlObj.url.replace("https://").replace("http://");
+  }
   //in most cases we won't need an id as it comes from the url
   if (urlObj.id) return;
 
@@ -72,9 +78,9 @@ module.exports = function (rootfolder) {
       }
     });
 
-    fb("Scanning " + suite.name, "info");
-    fb("Scanning the following " + urls.length + " urls:", "info");
-    fb(urls.map((x) => x.url).join(", "));
+    fb("Collecting " + suite.name, "info");
+    fb("Collecting from the following " + urls.length + " targets:", "info");
+    fb(urls.map((x) => x.label).join(", "));
 
     if (suite.collect.hasOwnProperty("beforeAll")) {
       var response = await suite.collect.beforeAll(collector, {
@@ -112,7 +118,7 @@ module.exports = function (rootfolder) {
 
     // ensure we only run each target once
     if (collector.urls[target.id]) {
-      fb("Skipping: " + target.url, "error");
+      fb("Skipping: " + target.label, "error");
       return;
     }
 
@@ -133,26 +139,63 @@ module.exports = function (rootfolder) {
         target,
       });
       if (response === false) {
-        fb("Skipping: " + target.url, "error");
+        fb("Skipping: " + target.label, "error");
         return;
       }
     }
 
     try {
-      fb(`Scanning: ${target.url}`, "info");
+      fb(`Collecting from: ${target.label}`, "info");
 
-      const log = StandardLogger.create({ console: { silent: true } });
-      const json = await websiteEvidenceCollector(config, log);
+      const logger = StandardLogger.create({ console: { silent: true } });
+
+      // collector
+      const collect = await wecCollector(config, logger);
+      await collect.createSession();
+
+      // here we hook up browse events, so that we can control what happens before and after
+      // a browse happens
+      if (suite.collect.hasOwnProperty("beforeEachBrowse")) {
+        collect.pageSession.beforeBrowse = async function (session, context) {
+          context.target = target;
+          context.suite = suite;
+
+          await suite.collect.beforeEachBrowse(collect, context);
+        };
+      }
+
+      if (suite.collect.hasOwnProperty("afterEachBrowse")) {
+        collect.pageSession.afterBrowse = async function (session, context) {
+          context.target = target;
+          context.suite = suite;
+
+          await suite.collect.afterEachBrowse(collect, context);
+        };
+      }
+
+      await collect.testConnection();
+      await collect.getPage();
+      await collect.collectAll();
+      await collect.endSession();
+
+      // inspector
+      const inspect = await wecInspector(
+        config,
+        logger,
+        collect.pageSession,
+        collect.output
+      );
+      await inspect.inspectAll();
 
       const outputFile = `${collector.rootFolder}/${collector.folder}/${suite.name}/${target.id}.json`;
-      fs.writeFileSync(outputFile, JSON.stringify(json, null, 2));
+      fs.writeFileSync(outputFile, JSON.stringify(collect.output, null, 2));
 
       if (suite.collect.hasOwnProperty("afterEach")) {
         await suite.collect.afterEach(collector, {
           suite,
           config,
           target,
-          data: json,
+          data: collect.output,
         });
       }
     } catch (ex) {
