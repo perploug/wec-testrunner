@@ -2,7 +2,6 @@
 
 const wecCollector = require("website-evidence-collector/collector/index");
 const wecInspector = require("website-evidence-collector/inspector/index");
-const wecReporter = require("website-evidence-collector/reporter/index");
 
 const StandardLogger = require("website-evidence-collector/lib/logger.js");
 const StandardWecConfig = require("website-evidence-collector/config.js");
