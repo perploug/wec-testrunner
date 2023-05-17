@@ -8,6 +8,7 @@ const fs = require("fs");
 // target can be filestring, folderstring, require, or array of require
 // args is the standard arguments object
 //output,
+
 function _addComponent(component, collection) {
   if (typeof component === "string") {
     if (component.endsWith(".js")) {
@@ -59,6 +60,7 @@ function m(args) {
 
   this.report = async function () {
     var reporter_instance = new reporter(args.output);
+
     await reporter_instance.generateReports(this.testSuites, this.reporters);
   };
 }

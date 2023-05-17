@@ -55,6 +55,11 @@
             table tbody tr:last-of-type {
                 border-bottom: 2px solid #009879;
             }
+            
+            table tbody td.group {
+                border-left: 1px solid #dddddd;
+            }
+
 
             table tbody tr.group {
                 font-weight: bold;
@@ -206,8 +211,21 @@
                     <th>
                         Url
                     </th>
+                    
+                    <td style="width: 50px">
+                        Cookies
+                    </td>
+                    
+                    <td style="width: 50px">
+                        Beacons
+                    </td>
+
 
                     <td style="width: 50px">
+                        Hosts
+                    </td>
+
+                    <td style="width: 50px" >
                         Tests
                     </td>
 
@@ -231,11 +249,33 @@
                             {{else}}
                                 <span class="red">&cross;</span> 
                             {{/if}}
-
+                            
+                            <a href="{{this.id}}.html">
                             {{this.url}}
+                            </a>
                         </th>
+                        
+                        <!-- Cookies --> 
+                        <td class="group">
+                            {{this.evidence.hosts.cookies.thirdParty.length}}    
+                            <br><small>3rd party</small>
+                        </td>
+                       
 
-                        <td>
+                         <!-- Beacons --> 
+                         <td class="group">
+                            {{this.evidence.hosts.beacons.thirdParty.length}}    
+                            <br><small>3rd party</small>
+                        </td>
+                      
+
+                        <!-- Domains --> 
+                        <td class="group">
+                            {{this.evidence.hosts.requests.thirdParty.length}}    
+                            <br><small>3rd party</small>
+                        </td>
+                        
+                        <td class="group">
                             <label class="label">{{this.tests_total}}</label>
                         </td>
                         <td>

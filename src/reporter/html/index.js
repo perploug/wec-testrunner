@@ -3,6 +3,8 @@ const path = require("path");
 const fs = require("fs");
 const rimraf = require("rimraf");
 
+const wecReporter = require("website-evidence-collector/reporter/index");
+
 module.exports = function (context = {}, args = {}) {
   this.context = context;
   this.args = args;
@@ -11,9 +13,11 @@ module.exports = function (context = {}, args = {}) {
 
   this.generateReport = async function (testSuiteResults, testSuites) {
     const reporter = this;
+
     rimraf.sync(
       path.join(reporter.context.rootFolder, reporter.context.folder, "html")
     );
+
     fs.mkdirSync(
       path.join(reporter.context.rootFolder, reporter.context.folder, "html")
     );
@@ -26,6 +30,12 @@ module.exports = function (context = {}, args = {}) {
 
     const template = Handlebars.compile(
       fs.readFileSync(workingTemplate, "utf8")
+    );
+
+    const reportFolder = path.join(
+      reporter.context.rootFolder,
+      reporter.context.folder,
+      "html"
     );
 
     testSuiteResults.sort((a, b) => (a.tests_failed < b.tests_failed ? 1 : -1));
@@ -41,13 +51,15 @@ module.exports = function (context = {}, args = {}) {
       );
     });
 
+    for (const suite of testSuiteResults) {
+      for (const target of suite.targets) {
+        const wecReport = wecReporter({ output: reportFolder });
+        wecReport.generateHtml(target.evidence, target.id + ".html", false);
+      }
+    }
+
     fs.writeFileSync(
-      path.join(
-        reporter.context.rootFolder,
-        reporter.context.folder,
-        "html",
-        "testreport.html"
-      ),
+      path.join(reportFolder, "testreport.html"),
       template({ tests: testSuiteResults, suites: testSuites })
     );
   };

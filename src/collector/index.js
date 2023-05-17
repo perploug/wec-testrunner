@@ -2,6 +2,7 @@
 
 const wecCollector = require("website-evidence-collector/collector/index");
 const wecInspector = require("website-evidence-collector/inspector/index");
+const wecReporter = require("website-evidence-collector/reporter/index");
 
 const StandardLogger = require("website-evidence-collector/lib/logger.js");
 const StandardWecConfig = require("website-evidence-collector/config.js");
@@ -11,18 +12,19 @@ const path = require("path");
 const rimraf = require("rimraf");
 const fb = require("../helpers/feedback");
 const { nanoid } = require("nanoid");
+const { error } = require("console");
 
 function generateUrlObj(url) {
   return {
     url: url,
-    label: url.replace("https://").replace("http://"),
+    label: url.replace("https://", "").replace("http://", ""),
     id: url.replace(/\W/g, ""),
   };
 }
 
 function generateIdOnUrlObj(urlObj) {
   if (!urlObj.label) {
-    urlObj.label = urlObj.url.replace("https://").replace("http://");
+    urlObj.label = urlObj.url.replace("https://", "").replace("http://", "");
   }
   //in most cases we won't need an id as it comes from the url
   if (urlObj.id) return;
@@ -94,7 +96,11 @@ module.exports = function (rootfolder) {
     }
 
     for (const url of urls) {
-      await this.collectUrl(url, suite, workingConfig);
+      try {
+        await this.collectUrl(url, suite, workingConfig);
+      } catch (ex) {
+        fb(`Could not collect from URL: ${url}`, "error");
+      }
     }
 
     // storing the index file of all urls scanned, otherwise its impossible to track what and in which variant it was scanned
@@ -187,7 +193,8 @@ module.exports = function (rootfolder) {
       );
       await inspect.inspectAll();
 
-      const outputFile = `${collector.rootFolder}/${collector.folder}/${suite.name}/${target.id}.json`;
+      const outputFolder = `${collector.rootFolder}/${collector.folder}/${suite.name}/`;
+      const outputFile = `${outputFolder}/${target.id}.json`;
       fs.writeFileSync(outputFile, JSON.stringify(collect.output, null, 2));
 
       if (suite.collect.hasOwnProperty("afterEach")) {

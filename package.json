@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "description": "Test Runner to automated Website Evidence Collector",
   "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./*": "./src/*.js",
+    "./*/": "./src/*/index.js"
+  },
   "scripts": {
     "test": "node implementation/index.js"
   },
@@ -22,6 +27,7 @@
     "junit-report-builder": "^3.0.0",
     "nanoid": "^3.1.30",
     "require-folder": "^1.0.0",
+    "rimraf": "^5.0.0",
     "strip-ansi": "4.0.0",
     "website-evidence-collector": "perploug/website-evidence-collector#browser-events"
   }
