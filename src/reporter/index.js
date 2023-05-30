@@ -21,8 +21,13 @@ module.exports = function (rootFolder) {
 
     for (const suite of testSuiteResults) {
       for (const target of suite.targets) {
-        const result = fs.readFileSync("output" + target.file, "utf8");
-        target.evidence = JSON.parse(result);
+        try {
+          const result = fs.readFileSync("output" + target.file, "utf8");
+          target.evidence = JSON.parse(result);
+        } catch (ex) {
+          // failure to collect..
+          target.failed = true;
+        }
       }
     }
 
